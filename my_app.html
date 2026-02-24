@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2d3436">
+    <title>Roast-O-Matic App</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --accent: #ff7675;
+            --dark: #2d3436;
+            --bg: #f1f2f6;
+            --sweet: #ff9ff3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        header h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Mobile Layout: Stacked by default */
+        main {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Desktop Layout: Side-by-side */
+        @media (min-width: 768px) {
+            main { flex-direction: row; overflow: hidden; }
+            #sidebar { width: 380px; height: 100%; border-right: 1px solid #ddd; }
+            #preview-area { height: 100%; }
+        }
+
+        #sidebar {
+            background: white;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #preview-area {
+            background: #dfe6e9;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.7rem; font-weight: bold; color: #b2bec3; margin-bottom: 4px; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #f1f2f6;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px; /* Prevents iOS zoom on focus */
+        }
+
+        .vibe-container {
+            display: flex;
+            gap: 5px;
+            background: #f1f2f6;
+            padding: 5px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .active-sweet { background: var(--sweet); color: white; }
+        .active-savage { background: var(--accent); color: white; }
+        .inactive { color: #b2bec3; }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .btn-send { background: #2ed573; color: white; }
+        .btn-lucky { background: #fdcb6e; }
+
+        #card {
+            background: white;
+            width: 100%;
+            max-width: 350px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #card h2 { margin: 0; font-size: 1.8rem; }
+        .joke { margin-top: 20px; border-top: 2px dashed #eee; padding-top: 20px; font-style: italic; }
+
+        .card-savage h2 { color: var(--accent); }
+        .card-sweet h2 { color: var(--sweet); }
+    </style>
+</head>
+<body>
+
+    <header><h1>Roast-O-Matic</h1></header>
+
+    <main>
+        <div id="sidebar">
+            <div class="vibe-container">
+                <div id="vibeSweet" class="toggle-btn inactive" onclick="setVibe('sweet')">Sweet 🍬</div>
+                <div id="vibeSavage" class="toggle-btn active-savage" onclick="setVibe('savage')">Savage 🔥</div>
+            </div>
+
+            <div class="input-group"><label>NAME</label><input type="text" id="inName" oninput="updatePreview()" placeholder="Who?"></div>
+            <div class="input-group"><label>AGE</label><input type="number" id="inAge" oninput="updatePreview()" placeholder="How old?"></div>
+            <div class="input-group"><label>HABIT</label><input type="text" id="inQuirk" oninput="updatePreview()" placeholder="e.g. snoring"></div>
+            <div class="input-group"><label>EMAIL</label><input type="email" id="inEmail" placeholder="friend@email.com"></div>
+
+            <button class="btn-send" onclick="sendEmail()">SEND ROAST ✉️</button>
+            <button class="btn-lucky" onclick="feelingLucky()">LUCKY 🎲</button>
+        </div>
+
+        <div id="preview-area">
+            <div id="card" class="card-savage">
+                <h2 id="outName">Happy Birthday!</h2>
+                <p id="outMsg">Ready to roast?</p>
+                <div id="outJoke" class="joke"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentVibe = 'savage';
+
+        function setVibe(vibe) {
+            currentVibe = vibe;
+            document.getElementById('vibeSweet').className = vibe === 'sweet' ? 'toggle-btn active-sweet' : 'toggle-btn inactive';
+            document.getElementById('vibeSavage').className = vibe === 'savage' ? 'toggle-btn active-savage' : 'toggle-btn inactive';
+            document.getElementById('card').className = vibe === 'sweet' ? 'card-sweet' : 'card-savage';
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('inName').value || "Friend";
+            const age = document.getElementById('inAge').value || "??";
+            const quirk = document.getElementById('inQuirk').value || "being yourself";
+            
+            document.getElementById('outName').innerText = `Happy Birthday, ${name}!`;
+            
+            if (currentVibe === 'savage') {
+                document.getElementById('outMsg').innerHTML = `Congrats on being <b>${age}</b>! You're now at the age where a "long weekend" means you slept past 8 AM.`;
+                document.getElementById('outJoke').innerText = `I'd roast you for ${quirk}, but the fire department said it's a safety hazard to light that many candles.`;
+            } else {
+                document.getElementById('outMsg').innerHTML = `Happy <b>${age}</b> Birthday! You truly light up every room you walk into.`;
+                document.getElementById('outJoke').innerText = `Keep on with the ${quirk}—it’s what makes you so special!`;
+            }
+        }
+
+        function sendEmail() {
+            const email = document.getElementById('inEmail').value;
+            if(!email) return alert("Enter an email!");
+            const body = encodeURIComponent(`${document.getElementById('outName').innerText}\n\n${document.getElementById('outMsg').innerText}\n\n${document.getElementById('outJoke').innerText}`);
+            window.location.href = `mailto:${email}?subject=A Birthday Message!&body=${body}`;
+        }
+
+        function feelingLucky() {
+            document.getElementById('inName').value = "Bestie";
+            document.getElementById('inAge').value = Math.floor(Math.random()*50)+18;
+            document.getElementById('inQuirk').value = "stealing fries";
+            updatePreview();
+        }
+    </script>
+</body>
+</html>
